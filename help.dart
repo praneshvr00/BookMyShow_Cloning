@@ -2,12 +2,8 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/rendering.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:auto_size_text/auto_size_text.dart';
+
 import 'package:book_my_show/screens/EventsScreen.dart';
-import 'package:book_my_show/screens/LocationScreen.dart';
 import 'package:book_my_show/screens/ProfileScreen.dart';
 import 'package:book_my_show/utils/apiFetch.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -17,8 +13,6 @@ import 'package:book_my_show/utils/widget_functions.dart';
 import 'package:carousel_indicator/carousel_indicator.dart';
 import 'package:book_my_show/utils/constants.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:book_my_show/globals.dart' as globals;
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key? key}) : super(key: key);
@@ -26,22 +20,19 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+var _future;
+
 class _HomeScreenState extends State<HomeScreen> {
   //
   int activeCarouselIndex = 0;
-  int _activeBuyOrRentIndex = 0;
   int _selectedPageIndex = 0;
-
-  List _fetchedBestEventData = [];
-  List _fetchedUltiEventData = [];
-  List _fetchedBuyOrRentData = [];
-  List _fetchedBestOfLiveData = [];
+  List _bestEvents = [];
+  // late final Future<List<dynamic>> _future;
   List<String> carousel_images = [
     "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80",
     "https://images.unsplash.com/photo-1460881680858-30d872d5b530?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=871&q=80",
     "https://images.unsplash.com/photo-1514533212735-5df27d970db0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=812&q=80"
   ];
-  List<String> buyOrRentData = [];
   void _onBottomNavItemTaped(int index) {
     if (index != 1)
       setState(() {
@@ -53,41 +44,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Future<String> getLocalPath() async {
-  //   var dir = await getExternalStorageDirectory();
-  //   File file = File(dir!.path + '/locations.json');
-  //   final doesExist = await file.exists();
-
-  //   if (doesExist) {
-  //   final String response =
-  //       await rootBundle.loadString('assets/localAPI/dynamic_images.json');
-  //     setState(() {
-  //       globals.userLocation = ;
-  //     });
-  //   }
-  //   return dir.path;
-  // }
-
   @override
   void initState() {
-    print("init called");
-
-    readJson();
+    print("nit called");
     super.initState();
+    _future = readJson();
   }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+  //     _future = readJson();
+  //   });
+  // }
 
-  Future<void> readJson() async {
-    final String response =
-        await rootBundle.loadString('assets/localAPI/dynamic_images.json');
-    final data = await json.decode(response);
-
-    setState(() {
-      _fetchedBestEventData = data['BestEvents'];
-      _fetchedUltiEventData = data['UltimateEvents'];
-      _fetchedBuyOrRentData = data['BuyOrRent'];
-      _fetchedBestOfLiveData = data['BestOfLiveEvents'];
-    });
-  }
+  // setUpTimedFetch() {
+  //   Timer.periodic(Duration(seconds: 5), (timer) {
+  //     setState(() {});
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -139,17 +114,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       textAlign: TextAlign.center,
                     ),
                     addVerticalSpace(4),
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => const LocationScreen()),
-                      ),
-                      child: Text(
-                        globals.userLocation,
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w100),
-                        textAlign: TextAlign.center,
-                      ),
+                    Text(
+                      'Oddanchatram',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w100),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -448,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Text(
                                     "Monday to Sunday, we got covered",
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w100,
                                       color: Colors.black54,
                                     ),
@@ -459,165 +428,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           Padding(
                             padding: const EdgeInsets.only(
                                 left: _margin, right: _margin),
-                            child: imageBuilder(
-                              "BestEvents",
-                              0.0,
-                              _fetchedBestEventData,
-                              size,
-                              200.0,
-                              3 / 2,
-                              20.0,
-                              10.0,
-                              Axis.vertical,
-                              NeverScrollableScrollPhysics(),
-                            ),
+                            child: imageBuilder(),
                           ),
-                          addVerticalSpace(_widgetspace),
-                          Padding(
-                              padding: const EdgeInsets.only(
-                                  left: _margin, right: _margin),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "The Ultimate Events List",
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  addVerticalSpace(4.0),
-                                  Text(
-                                    "Good times outdoor or at home",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w100,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ],
-                              )),
                           addVerticalSpace(12.0),
-                          Padding(
-                            padding: const EdgeInsets.only(
-                                left: _margin, right: _margin),
-                            child: imageBuilder(
-                              "UltimateEvents",
-                              size.width * 0.20,
-                              _fetchedUltiEventData,
-                              size,
-                              200.0,
-                              3 / 2,
-                              20.0,
-                              10.0,
-                              Axis.vertical,
-                              NeverScrollableScrollPhysics(),
-                            ),
-                          ),
-                          addVerticalSpace(_widgetspace + 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                  image: AssetImage(
-                                      'assets/images/spotify premium.jpg'),
-                                  fit: BoxFit.fill),
-                            ),
-                            width: size.width,
-                            height: size.height * 0.17,
-                          ),
-
-                          // carousel card
-                          _fetchedBuyOrRentData.length > 0
-                              ? Stack(
-                                  children: [
-                                    CarouselSlider(
-                                      items: _fetchedBuyOrRentData.map((e) {
-                                        return CarouselCard(e, size, _margin);
-                                      }).toList(),
-                                      options: CarouselOptions(
-                                        viewportFraction: 1.0,
-                                        autoPlay: true,
-                                        initialPage: 0,
-                                        height: size.height * 0.46,
-                                        scrollDirection: Axis.horizontal,
-                                        enableInfiniteScroll: false,
-                                        onPageChanged: (index, reason) =>
-                                            setState(() =>
-                                                _activeBuyOrRentIndex = index),
-                                      ),
-                                    ),
-                                    Positioned.fill(
-                                      bottom: 10,
-                                      child: Align(
-                                        alignment: Alignment.bottomCenter,
-                                        child: AnimatedSmoothIndicator(
-                                          count: _fetchedBuyOrRentData.length,
-                                          activeIndex: _activeBuyOrRentIndex,
-                                          effect: ScrollingDotsEffect(
-                                            fixedCenter: true,
-                                            activeDotColor: Colors.white,
-                                            dotHeight: 7,
-                                            dotWidth: 7,
-                                            dotColor: Colors.grey,
-                                            spacing: 4,
-                                            maxVisibleDots:
-                                                _fetchedBuyOrRentData.length >=
-                                                        5
-                                                    ? 5
-                                                    : _fetchedBuyOrRentData
-                                                        .length,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                          addVerticalSpace(_widgetspace),
-                          Padding(
-                              padding: const EdgeInsets.only(
-                                  left: _margin, right: _margin),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "The Best of Live Events",
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  addVerticalSpace(4.0),
-                                  Text(
-                                    "Step out or stay in, interesting experiences for everyone",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w100,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ],
-                              )),
-                          addVerticalSpace(_widgetspace),
-                          Padding(
-                            padding: const EdgeInsets.only(left: _margin),
-                            child: SizedBox(
-                              width: size.width,
-                              height: 300,
-                              child: imageBuilder(
-                                "BestOfLiveEvents",
-                                0.0,
-                                _fetchedBestOfLiveData,
-                                size,
-                                200.0,
-                                6 / 5,
-                                10.0,
-                                15.0,
-                                Axis.horizontal,
-                                BouncingScrollPhysics(),
-                              ),
-                            ), // 250, 1/2, 20
-                          ),
+                          // Padding(
+                          //   padding: const EdgeInsets.only(
+                          //       left: _margin, right: _margin),
+                          //   child: imageBuilder(context, size),
+                          // ),
                         ],
                       ),
                     ),
@@ -638,162 +456,60 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-//200, 3/2, 20, 10
-  Widget imageBuilder(
-      type,
-      _rightPadding,
-      data,
-      size,
-      maxCrossAxisExtent,
-      childAspectRatio,
-      crossAxisSpacing,
-      mainAxisSpacing,
-      ScrollDirection,
-      physics) {
-    return Padding(
-      padding: EdgeInsets.only(right: _rightPadding),
-      child: Container(
-        width: size.width,
-        child: data.length >= 1
-            ? GridView.builder(
-                scrollDirection: ScrollDirection,
-                physics: physics,
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: maxCrossAxisExtent,
-                    childAspectRatio: childAspectRatio,
-                    crossAxisSpacing: crossAxisSpacing,
-                    mainAxisSpacing: mainAxisSpacing),
-                shrinkWrap: true,
-                itemCount: data.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: NetworkImage(
-                              data[index]['url'],
-                            ),
-                            fit: BoxFit.cover),
-                        borderRadius: BorderRadius.circular(10)),
-                    width: 100,
-                    height: 100,
-                  );
-                })
-            : Center(
-                child: CircularProgressIndicator(),
-              ),
-      ),
-    );
+  Widget imageBuilder() {
+    return FutureBuilder<List>(
+        future: _future,
+        builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
+          print("1");
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          if (snapshot.hasData) {
+            List axeList = snapshot.data!;
+
+            return Container(
+              child: GridView.builder(
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
+                      childAspectRatio: 3 / 2,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20),
+                  shrinkWrap: true,
+                  scrollDirection: Axis.vertical,
+                  itemCount: axeList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Container(
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: NetworkImage(
+                                axeList[index]['url'],
+                              ),
+                              fit: BoxFit.cover),
+                          borderRadius: BorderRadius.circular(10)),
+                      width: 100,
+                      height: 100,
+                    );
+                  }),
+            );
+          }
+          return const Text("No Data");
+        });
   }
 }
 
-Widget CarouselCard(e, size, _margin) {
-  return SizedBox(
-    width: size.width,
-    height: size.height * 0.46,
-    child: Card(
-      margin: EdgeInsets.zero,
-      color: COLOR_DARK_BLUE,
-      child: Column(
-        // mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: _margin, left: _margin + 2.0),
-                child: Container(
-                  height: size.height * 0.30,
-                  width: size.width * 0.40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.0),
-                    image: DecorationImage(
-                        image: NetworkImage(e['url']), fit: BoxFit.fill),
-                  ),
-                ),
-              ),
-              addHorizontalSpace(16.0),
-              SizedBox(
-                width: size.width * 0.48,
-                height: size.height * 0.35,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    addVerticalSpace(18.0),
-                    AutoSizeText(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      presetFontSizes: [25],
-                      e['movieName'] as String,
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    addVerticalSpace(8.0),
-                    AutoSizeText(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      presetFontSizes: [15],
-                      e['duration'] + e['genres'] as String,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w100,
-                        color: Colors.white,
-                      ),
-                    ),
-                    addVerticalSpace(8.0),
-                    AutoSizeText(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      presetFontSizes: [15],
-                      e['language'] as String,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w100,
-                        color: Colors.white,
-                      ),
-                    ),
-                    addVerticalSpace(12.0),
-                    AutoSizeText(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 3,
-                      presetFontSizes: [15],
-                      e['about'] as String,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w100,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          ElevatedButton(
-              onPressed: () => print("Buy or Rent Clicked"),
-              child: Container(
-                width: size.width * 0.82,
-                height: size.height * 0.05,
-                decoration:
-                    BoxDecoration(borderRadius: BorderRadius.circular(8.0)),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Buy or Rent',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ))
-        ],
-      ),
-    ),
-  );
+Future<List> readJson() async {
+  final String response =
+      await rootBundle.loadString('assets/localAPI/dynamic_images.json');
+  final data = await json.decode(response);
+  // print(data);
+  return data[0]['BestEvents'];
 }
+// Container(
+//               child: Image.network(
+//                 axeList[0]['url'],
+//                 width: 100,
+//                 height: 150,
+//               ),
+//             );
